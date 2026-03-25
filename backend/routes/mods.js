@@ -11,17 +11,15 @@ const CSGO_PORT = parseInt(process.env.CSGO_SERVER_PORT || '27015');
 const CSGO_RCON_PASS = process.env.CSGO_RCON_PASSWORD || 'rconpassword';
 const { Rcon } = require('rcon-client');
 
-// Middleware for authentication
+// Simple password check instead of JWT
 const authenticate = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
-    const jwt = require('jsonwebtoken');
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(401).json({ message: 'Invalid token' });
-        req.user = decoded;
-        next();
-    });
+    const adminPassword = (process.env.ADMIN_PASSWORD || 'admin').trim();
+    
+    if (!token || token !== adminPassword) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    next();
 };
 
 router.use(authenticate);
