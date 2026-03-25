@@ -9,6 +9,20 @@ const getSettings = () => ({
     password: (process.env.CSGO_RCON_PASSWORD || 'rconpassword').trim()
 });
 
+// Verify login:password from base64 token
+const authenticate = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    const envLogin = (process.env.WEB_LOGIN || 'admin').trim();
+    const envPassword = (process.env.WEB_PASSWORD || 'admin').trim();
+    const expectedToken = Buffer.from(`${envLogin}:${envPassword}`).toString('base64');
+
+    if (!token || token !== expectedToken) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    next();
+};
+
 router.use(authenticate);
 
 // Get server status and players
@@ -81,11 +95,12 @@ router.get('/test-connection', async (req, res) => {
 // Kick player
 router.post('/kick', async (req, res) => {
     const { player_id, reason } = req.body;
+    const settings = getSettings();
     try {
         const rcon = await Rcon.connect({
-            host: CSGO_IP,
-            port: CSGO_PORT,
-            password: CSGO_RCON_PASS
+            host: settings.host,
+            port: settings.port,
+            password: settings.password
         });
         const response = await rcon.send(`kickid ${player_id} ${reason || 'Kicked by admin'}`);
         await rcon.end();
@@ -99,11 +114,12 @@ router.post('/kick', async (req, res) => {
 // Ban player
 router.post('/ban', async (req, res) => {
     const { player_id, duration, reason } = req.body;
+    const settings = getSettings();
     try {
         const rcon = await Rcon.connect({
-            host: CSGO_IP,
-            port: CSGO_PORT,
-            password: CSGO_RCON_PASS
+            host: settings.host,
+            port: settings.port,
+            password: settings.password
         });
         // duration in minutes, 0 for permanent
         const response = await rcon.send(`banid ${duration || 0} ${player_id} ${reason || 'Banned by admin'}`);
@@ -118,11 +134,12 @@ router.post('/ban', async (req, res) => {
 // Change map
 router.post('/change-map', async (req, res) => {
     const { map } = req.body;
+    const settings = getSettings();
     try {
         const rcon = await Rcon.connect({
-            host: CSGO_IP,
-            port: CSGO_PORT,
-            password: CSGO_RCON_PASS
+            host: settings.host,
+            port: settings.port,
+            password: settings.password
         });
         const response = await rcon.send(`changelevel ${map}`);
         await rcon.end();

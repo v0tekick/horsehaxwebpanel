@@ -12,6 +12,20 @@ const getSettings = () => ({
     serverPath: (process.env.CSGO_SERVER_PATH || '/home/csgo-server/server').trim()
 });
 
+// Verify login:password from base64 token
+const authenticate = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    const envLogin = (process.env.WEB_LOGIN || 'admin').trim();
+    const envPassword = (process.env.WEB_PASSWORD || 'admin').trim();
+    const expectedToken = Buffer.from(`${envLogin}:${envPassword}`).toString('base64');
+
+    if (!token || token !== expectedToken) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    next();
+};
+
 router.use(authenticate);
 
 // Get list of installed mods
