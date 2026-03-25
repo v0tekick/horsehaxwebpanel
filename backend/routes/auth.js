@@ -3,13 +3,18 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// For simplicity, we use a single admin account from .env
-const ADMIN_PASSWORD_HASH = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin', 10);
-
 router.post('/login', (req, res) => {
     const { password } = req.body;
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
 
-    if (bcrypt.compareSync(password, ADMIN_PASSWORD_HASH)) {
+    // Compare using bcrypt
+    if (bcrypt.compareSync(password, bcrypt.hashSync(adminPassword, 10))) {
+        const token = jwt.sign({ user: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        return res.json({ token });
+    }
+
+    // Fallback for plain text if bcrypt has issues with specific characters
+    if (password === adminPassword) {
         const token = jwt.sign({ user: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1d' });
         return res.json({ token });
     }
