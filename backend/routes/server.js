@@ -34,8 +34,8 @@ router.get('/status', async (req, res) => {
     }
 
     // Try multiple protocols that might work for CS:GO
-    // In Gamedig v5, 'source' is often the correct generic protocol for Valve games
-    const protocols = ['csgo', 'source']; 
+    // Note: In some versions, 'valve' is used, in others 'goldsrc' or 'source'
+    const protocols = ['csgo', 'goldsrc']; 
 
     for (const host of hosts) {
         for (const proto of protocols) {
@@ -45,8 +45,8 @@ router.get('/status', async (req, res) => {
                     type: proto,
                     host: host,
                     port: settings.port,
-                    maxAttempts: 3,
-                    socketTimeout: 5000
+                    maxAttempts: 1, // Reduce attempts to speed up fallback
+                    socketTimeout: 2000
                 });
                 global.addLog(`[QUERY SUCCESS] ${host}:${settings.port} using ${proto}`);
                 return res.json(state);
@@ -67,18 +67,33 @@ router.get('/status', async (req, res) => {
                 timeout: 5000
             });
             const status = await rcon.send('status');
+            
+            // Also try to get player list for the players tab
+            let usersResponse = "";
+            try {
+                usersResponse = await rcon.send('users');
+            } catch (e) {}
+            
             await rcon.end();
             
-            // Basic parsing of 'status' command to mock a gamedig response
+            // Basic parsing of 'status' command
             const nameMatch = status.match(/hostname\s+:\s+(.+)/);
             const mapMatch = status.match(/map\s+:\s+([^\s]+)/);
             const playersMatch = status.match(/players\s+:\s+(\d+)\s+humans/);
             
-            global.addLog(`[RCON FALLBACK SUCCESS] ${host}`);
+            // Try to parse actual player names from 'status' or 'users'
+            // A typical 'status' line for players: # 2 "PlayerName" STEAM_1:0:12345 01:23 50 0 active
+            const playerLines = status.split('\n').filter(line => line.trim().startsWith('#') && line.includes('"'));
+            const players = playerLines.map(line => {
+                const match = line.match(/"([^"]+)"/);
+                return { name: match ? match[1] : "Unknown Player" };
+            });
+
+            global.addLog(`[RCON FALLBACK SUCCESS] ${host} (${players.length} players found)`);
             return res.json({
-                name: nameMatch ? nameMatch[1] : "CS:GO Server (RCON Fallback)",
-                map: mapMatch ? mapMatch[1] : "unknown",
-                players: new Array(playersMatch ? parseInt(playersMatch[1]) : 0).fill({ name: "Player" }),
+                name: nameMatch ? nameMatch[1].trim() : "CS:GO Server (RCON Fallback)",
+                map: mapMatch ? mapMatch[1].trim() : "unknown",
+                players: players.length > 0 ? players : new Array(playersMatch ? parseInt(playersMatch[1]) : 0).fill({ name: "Player" }),
                 maxplayers: 64,
                 raw: { rcon: true }
             });
