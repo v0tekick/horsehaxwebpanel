@@ -26,7 +26,11 @@ const Dashboard = () => {
   }, []);
 
   if (loading) return <div className="text-white">Loading status...</div>;
-  if (!status) return <div className="text-red-400">Error connecting to server</div>;
+  
+  const serverName = status?.name || status?.raw?.name || "CS:GO Server";
+  const currentMap = status?.map || status?.raw?.map || "unknown";
+  const playerCount = status?.players?.length ?? 0;
+  const maxPlayers = status?.maxplayers || 64;
 
   return (
     <div className="space-y-8">
@@ -46,7 +50,7 @@ const Dashboard = () => {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Server Name</p>
-              <h3 className="text-xl font-semibold text-white truncate max-w-[200px]">{status.name}</h3>
+              <h3 className="text-xl font-semibold text-white truncate max-w-[200px]">{serverName}</h3>
             </div>
           </div>
         </div>
@@ -59,7 +63,7 @@ const Dashboard = () => {
             <div>
               <p className="text-slate-400 text-sm">Players</p>
               <h3 className="text-xl font-semibold text-white">
-                {status.players.length} / {status.maxplayers}
+                {playerCount} / {maxPlayers}
               </h3>
             </div>
           </div>
@@ -72,7 +76,7 @@ const Dashboard = () => {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Current Map</p>
-              <h3 className="text-xl font-semibold text-white">{status.map}</h3>
+              <h3 className="text-xl font-semibold text-white">{currentMap}</h3>
             </div>
           </div>
         </div>
