@@ -34,7 +34,8 @@ router.get('/status', async (req, res) => {
     }
 
     // Try multiple protocols that might work for CS:GO
-    const protocols = ['csgo', 'valve']; 
+    // In Gamedig v5, 'source' is often the correct generic protocol for Valve games
+    const protocols = ['csgo', 'source']; 
 
     for (const host of hosts) {
         for (const proto of protocols) {
@@ -45,14 +46,44 @@ router.get('/status', async (req, res) => {
                     host: host,
                     port: settings.port,
                     maxAttempts: 3,
-                    socketTimeout: 5000,
-                    attemptTimeout: 5000
+                    socketTimeout: 5000
                 });
                 global.addLog(`[QUERY SUCCESS] ${host}:${settings.port} using ${proto}`);
                 return res.json(state);
             } catch (error) {
                 global.addLog(`[QUERY ERROR] ${host} (${proto}): ${error.message}`);
             }
+        }
+    }
+
+    // If UDP query fails, try a very simple RCON fallback to at least show the server is alive
+    global.addLog(`[QUERY] UDP failed, attempting RCON status fallback...`);
+    for (const host of hosts) {
+        try {
+            const rcon = await Rcon.connect({
+                host: host,
+                port: settings.port,
+                password: settings.password,
+                timeout: 5000
+            });
+            const status = await rcon.send('status');
+            await rcon.end();
+            
+            // Basic parsing of 'status' command to mock a gamedig response
+            const nameMatch = status.match(/hostname\s+:\s+(.+)/);
+            const mapMatch = status.match(/map\s+:\s+([^\s]+)/);
+            const playersMatch = status.match(/players\s+:\s+(\d+)\s+humans/);
+            
+            global.addLog(`[RCON FALLBACK SUCCESS] ${host}`);
+            return res.json({
+                name: nameMatch ? nameMatch[1] : "CS:GO Server (RCON Fallback)",
+                map: mapMatch ? mapMatch[1] : "unknown",
+                players: new Array(playersMatch ? parseInt(playersMatch[1]) : 0).fill({ name: "Player" }),
+                maxplayers: 64,
+                raw: { rcon: true }
+            });
+        } catch (e) {
+            global.addLog(`[RCON FALLBACK ERROR] ${host}: ${e.message}`);
         }
     }
 
