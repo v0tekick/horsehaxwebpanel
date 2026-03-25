@@ -5,33 +5,28 @@ const path = require('path');
 const axios = require('axios');
 const { exec } = require('child_process');
 
-const SERVER_PATH = process.env.CSGO_SERVER_PATH || '/home/csgo-server/server';
-const CSGO_IP = process.env.CSGO_SERVER_IP || '127.0.0.1';
-const CSGO_PORT = parseInt(process.env.CSGO_SERVER_PORT || '27015');
-const CSGO_RCON_PASS = process.env.CSGO_RCON_PASSWORD || 'rconpassword';
-const { Rcon } = require('rcon-client');
-
-// Verify login:password from base64 token
-const authenticate = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    
-    const envLogin = (process.env.WEB_LOGIN || 'admin').trim();
-    const envPassword = (process.env.WEB_PASSWORD || 'admin').trim();
-    const expectedToken = Buffer.from(`${envLogin}:${envPassword}`).toString('base64');
-
-    if (!token || token !== expectedToken) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
-    next();
-};
+const getSettings = () => ({
+    host: (process.env.CSGO_SERVER_IP || '127.0.0.1').trim(),
+    port: parseInt(process.env.CSGO_SERVER_PORT || '27015'),
+    password: (process.env.CSGO_RCON_PASSWORD || 'rconpassword').trim(),
+    serverPath: (process.env.CSGO_SERVER_PATH || '/home/csgo-server/server').trim()
+});
 
 router.use(authenticate);
 
 // Get list of installed mods
 router.get('/', (req, res) => {
-    const pluginsPath = path.join(SERVER_PATH, 'csgo/addons/sourcemod/plugins');
+    const settings = getSettings();
+    const pluginsPath = path.join(settings.serverPath, 'csgo/addons/sourcemod/plugins');
+    console.log(`[FILES] Checking plugins at: ${pluginsPath}`);
+    
     if (!fs.existsSync(pluginsPath)) {
-        return res.json({ message: 'SourceMod plugins directory not found', plugins: [] });
+        console.warn(`[FILES ERROR] Plugins directory not found at: ${pluginsPath}`);
+        return res.json({ 
+            message: 'SourceMod plugins directory not found', 
+            path: pluginsPath,
+            plugins: [] 
+        });
     }
     const plugins = fs.readdirSync(pluginsPath).filter(file => file.endsWith('.smx'));
     res.json({ plugins });
@@ -40,7 +35,10 @@ router.get('/', (req, res) => {
 // Install mod from direct link
 router.post('/install', async (req, res) => {
     const { url, fileName } = req.body;
-    const dest = path.join(SERVER_PATH, 'csgo/addons/sourcemod/plugins', fileName);
+    const settings = getSettings();
+    const dest = path.join(settings.serverPath, 'csgo/addons/sourcemod/plugins', fileName);
+    console.log(`[FILES] Installing mod from ${url} to ${dest}`);
+    
     try {
         const response = await axios({
             method: 'get',
@@ -50,9 +48,12 @@ router.post('/install', async (req, res) => {
         const writer = fs.createWriteStream(dest);
         response.data.pipe(writer);
         writer.on('finish', () => res.json({ message: 'Mod installed successfully' }));
-        writer.on('error', (err) => res.status(500).json({ message: 'Error writing mod file', error: err.message }));
+        writer.on('error', (err) => {
+            console.error(`[FILES ERROR] ${err.message}`);
+            res.status(500).json({ message: 'Error writing mod file', error: err.message });
+        });
     } catch (error) {
-        console.error(error);
+        console.error(`[FILES ERROR] ${error.message}`);
         res.status(500).json({ message: 'Error downloading mod', error: error.message });
     }
 });
@@ -60,7 +61,10 @@ router.post('/install', async (req, res) => {
 // Delete mod
 router.delete('/:fileName', (req, res) => {
     const { fileName } = req.params;
-    const filePath = path.join(SERVER_PATH, 'csgo/addons/sourcemod/plugins', fileName);
+    const settings = getSettings();
+    const filePath = path.join(settings.serverPath, 'csgo/addons/sourcemod/plugins', fileName);
+    console.log(`[FILES] Deleting mod at: ${filePath}`);
+    
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         res.json({ message: 'Mod deleted successfully' });
@@ -72,18 +76,20 @@ router.delete('/:fileName', (req, res) => {
 // Workshop map management
 router.post('/workshop-map', async (req, res) => {
     const { workshop_id } = req.body;
+    const settings = getSettings();
+    console.log(`[RCON] Setting workshop map ${workshop_id} on ${settings.host}`);
     try {
         const rcon = await Rcon.connect({
-            host: CSGO_IP,
-            port: CSGO_PORT,
-            password: CSGO_RCON_PASS
+            host: settings.host,
+            port: settings.port,
+            password: settings.password
         });
         const response = await rcon.send(`host_workshop_map ${workshop_id}`);
         await rcon.end();
         res.json({ response });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error setting workshop map' });
+        console.error(`[RCON ERROR] ${error.message}`);
+        res.status(500).json({ message: 'Error setting workshop map', error: error.message });
     }
 });
 
