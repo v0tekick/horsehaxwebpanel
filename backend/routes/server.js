@@ -30,39 +30,28 @@ router.get('/status', async (req, res) => {
     const settings = getSettings();
     const hosts = [settings.host];
     if (settings.host === '127.0.0.1') {
-        // Fallback to public IP if loopback fails
         hosts.push('150.241.116.177');
     }
 
+    // Try multiple protocols that might work for CS:GO
+    const protocols = ['csgo', 'valve']; 
+
     for (const host of hosts) {
-        global.addLog(`[QUERY] Attempting to query ${host}:${settings.port} (type: csgo)`);
-        try {
-            const state = await GameDig.query({
-                type: 'csgo',
-                host: host,
-                port: settings.port,
-                maxAttempts: 3,
-                socketTimeout: 3000
-            });
-            global.addLog(`[QUERY SUCCESS] ${host}:${settings.port}`);
-            return res.json(state);
-        } catch (error) {
-            global.addLog(`[QUERY ERROR] ${host} (csgo): ${error.message}`);
-            
-            // Try 'source' type as fallback
-            global.addLog(`[QUERY] Attempting fallback query ${host}:${settings.port} (type: source)`);
+        for (const proto of protocols) {
+            global.addLog(`[QUERY] Attempting ${host}:${settings.port} (type: ${proto})`);
             try {
                 const state = await GameDig.query({
-                    type: 'source',
+                    type: proto,
                     host: host,
                     port: settings.port,
-                    maxAttempts: 2,
-                    socketTimeout: 2000
+                    maxAttempts: 3,
+                    socketTimeout: 5000,
+                    attemptTimeout: 5000
                 });
-                global.addLog(`[QUERY SUCCESS] ${host}:${settings.port} (fallback)`);
+                global.addLog(`[QUERY SUCCESS] ${host}:${settings.port} using ${proto}`);
                 return res.json(state);
-            } catch (fallbackError) {
-                global.addLog(`[QUERY ERROR] ${host} (source): ${fallbackError.message}`);
+            } catch (error) {
+                global.addLog(`[QUERY ERROR] ${host} (${proto}): ${error.message}`);
             }
         }
     }
@@ -84,11 +73,11 @@ router.post('/command', async (req, res) => {
                 host: host,
                 port: settings.port,
                 password: settings.password,
-                timeout: 5000
+                timeout: 10000
             });
             const response = await rcon.send(command);
             await rcon.end();
-            global.addLog(`[RCON SUCCESS] ${host}:${settings.port}`);
+            global.addLog(`[RCON SUCCESS] ${host}:${settings.port} - Response received`);
             return res.json({ response });
         } catch (error) {
             global.addLog(`[RCON ERROR] ${host}:${settings.port}: ${error.message}`);
