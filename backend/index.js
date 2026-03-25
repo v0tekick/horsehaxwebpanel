@@ -10,10 +10,11 @@ const modRoutes = require('./routes/mods');
 
 // Self-check for configuration
 console.log('--- SERVER STARTUP SELF-CHECK ---');
-if (process.env.ADMIN_PASSWORD) {
-    console.log(`[CONFIG] ADMIN_PASSWORD is loaded (Length: ${process.env.ADMIN_PASSWORD.length})`);
+if (process.env.WEB_LOGIN && process.env.WEB_PASSWORD) {
+    console.log(`[CONFIG] WEB_LOGIN: ${process.env.WEB_LOGIN}`);
+    console.log(`[CONFIG] WEB_PASSWORD: ${process.env.WEB_PASSWORD.length} chars`);
 } else {
-    console.warn('[CONFIG] CRITICAL ERROR: ADMIN_PASSWORD is NOT loaded from .env!');
+    console.warn('[CONFIG] CRITICAL ERROR: WEB_LOGIN or WEB_PASSWORD is NOT loaded from .env!');
 }
 if (process.env.JWT_SECRET) {
     console.log('[CONFIG] JWT_SECRET is loaded');

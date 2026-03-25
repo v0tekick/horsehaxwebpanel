@@ -4,16 +4,26 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 router.post('/login', (req, res) => {
-    const { password } = req.body;
-    const adminPassword = (process.env.ADMIN_PASSWORD || 'admin').trim();
+    const { login, password } = req.body;
+    
+    const envLogin = (process.env.WEB_LOGIN || 'admin').trim();
+    const envPassword = (process.env.WEB_PASSWORD || 'admin').trim();
+    
+    const providedLogin = (login || '').trim();
     const providedPassword = (password || '').trim();
 
-    if (providedPassword === adminPassword) {
-        // We'll still send a "token" so the frontend doesn't break, 
-        // but it's just the password itself now.
-        return res.json({ token: adminPassword });
+    console.log(`--- LOGIN ATTEMPT ---`);
+    console.log(`Login: "${providedLogin}" vs "${envLogin}"`);
+    console.log(`Pass:  "${providedPassword.length} chars" vs "${envPassword.length} chars"`);
+
+    if (providedLogin === envLogin && providedPassword === envPassword) {
+        console.log('--- LOGIN SUCCESS ---');
+        // Simple token: login:password encoded in base64
+        const token = Buffer.from(`${envLogin}:${envPassword}`).toString('base64');
+        return res.json({ token });
     }
 
+    console.log('--- LOGIN FAILED ---');
     return res.status(401).json({ message: 'Invalid credentials' });
 });
 
