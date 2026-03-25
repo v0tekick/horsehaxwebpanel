@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Package, Plus, Trash2, Download, ExternalLink, RefreshCw } from 'lucide-react';
+import { Package, Plus, Trash2, Download, ExternalLink, RefreshCw, Layers, ShieldCheck, Cpu, HardDrive } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Mods = () => {
   const [mods, setMods] = useState([]);
@@ -14,7 +15,7 @@ const Mods = () => {
       const response = await axios.get('/api/mods', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMods(response.data.plugins);
+      setMods(response.data.plugins || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,17 +39,17 @@ const Mods = () => {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Mod installed successfully!');
+      alert('SourceMod plugin successfully integrated into system.');
       setInstallUrl('');
       setInstallName('');
       fetchMods();
     } catch (err) {
-      alert('Error installing mod');
+      alert('Integration failed. Verify direct download link.');
     }
   };
 
   const handleDelete = async (fileName) => {
-    if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
+    if (!confirm(`Are you sure you want to de-register ${fileName}?`)) return;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`/api/mods/${fileName}`, {
@@ -56,103 +57,156 @@ const Mods = () => {
       });
       fetchMods();
     } catch (err) {
-      alert('Error deleting mod');
+      alert('Failed to remove plugin from filesystem.');
     }
   };
 
-  if (loading) return <div className="text-white">Loading SourceMod...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <p className="text-slate-400 font-medium animate-pulse">Accessing SourceMod filesystem...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Package className="w-8 h-8 text-blue-500" />
-          <h2 className="text-3xl font-bold text-white">SourceMod Management</h2>
+    <div className="space-y-10">
+      <header className="flex items-center justify-between">
+        <div>
+          <h2 className="text-4xl font-extrabold text-white tracking-tight italic uppercase">Plugin Matrix</h2>
+          <p className="text-slate-400 mt-1 font-medium tracking-tight">Manage SourceMod extensions and binary assets</p>
         </div>
+        
         <button
           onClick={fetchMods}
-          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700"
+          className="p-4 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-primary rounded-2xl border border-white/5 transition-all group"
         >
-          <RefreshCw className="w-5 h-5" />
+          <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
         </button>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
-          <div className="bg-slate-900 px-8 py-4 border-b border-slate-700 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Installed Plugins</h3>
-            <span className="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-bold border border-blue-500/20">
-              {mods.length} Active
+        {/* Plugin List */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-2 space-y-6"
+        >
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-bold text-white uppercase tracking-wider">Active Modules</h3>
+            </div>
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em] bg-primary/10 px-4 py-1 rounded-full border border-primary/20">
+              {mods.length} Binary files
             </span>
           </div>
-          <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <AnimatePresence>
               {mods.length > 0 ? (
                 mods.map((mod, idx) => (
-                  <div key={idx} className="p-4 bg-slate-900/50 rounded-xl border border-slate-700 hover:border-blue-500/30 transition-all flex items-center justify-between group">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg">
-                        <Package className="w-4 h-4" />
-                      </div>
-                      <span className="text-white font-medium text-sm">{mod}</span>
+                  <motion.div 
+                    key={mod}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="group relative p-6 bg-surface/40 backdrop-blur-md border border-white/5 rounded-3xl hover:border-primary/50 transition-all hover:shadow-2xl hover:shadow-primary/5 overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Cpu className="w-12 h-12" />
                     </div>
-                    <button
-                      onClick={() => handleDelete(mod)}
-                      className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                    
+                    <div className="flex items-start justify-between relative z-10">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-white/5 text-slate-400 group-hover:text-primary group-hover:bg-primary/10 rounded-2xl transition-all">
+                          <Package className="w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-white font-bold group-hover:text-primary transition-colors truncate max-w-[120px]">{mod}</span>
+                          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Extension File</span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleDelete(mod)}
+                        className="p-3 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all group/del"
+                      >
+                        <Trash2 className="w-4 h-4 group-hover/del:scale-110 transition-transform" />
+                      </button>
+                    </div>
+                  </motion.div>
                 ))
               ) : (
-                <div className="col-span-full py-12 text-center text-slate-500">
-                  No SourceMod plugins detected or directory not accessible.
+                <div className="col-span-full py-20 bg-white/5 rounded-[2.5rem] border border-dashed border-white/10 flex flex-col items-center justify-center space-y-4">
+                  <HardDrive className="w-12 h-12 text-slate-700" />
+                  <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">No modules detected</p>
                 </div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-lg h-fit">
-          <div className="flex items-center gap-3 mb-6">
-            <Download className="w-6 h-6 text-green-500" />
-            <h3 className="text-xl font-semibold text-white">Install Plugin</h3>
+        {/* Installation Panel */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-surface/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/5 shadow-xl h-fit sticky top-8"
+        >
+          <div className="flex items-center gap-4 mb-10">
+            <div className="p-3 bg-green-500/10 text-green-500 rounded-2xl border border-green-500/20">
+              <Download className="w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-black text-white tracking-tight uppercase">Module Uplink</h3>
           </div>
-          <form onSubmit={handleInstall} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-400">Direct Download URL</label>
+
+          <form onSubmit={handleInstall} className="space-y-6">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Direct Binary URL</label>
               <input
                 type="url"
                 required
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://example.com/plugin.smx"
+                className="w-full px-6 py-4 bg-slate-950/50 border border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono text-xs"
+                placeholder="https://sourcemod.net/plugin.smx"
                 value={installUrl}
                 onChange={(e) => setInstallUrl(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-400">Save As</label>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Local Designation</label>
               <input
                 type="text"
                 required
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-6 py-4 bg-slate-950/50 border border-white/5 rounded-2xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono text-xs"
                 placeholder="plugin_name.smx"
                 value={installName}
                 onChange={(e) => setInstallName(e.target.value)}
               />
             </div>
+            
             <button
               type="submit"
-              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
+              disabled={!installUrl || !installName}
+              className="w-full py-5 bg-primary hover:bg-primary/90 disabled:bg-white/5 disabled:text-slate-700 text-white font-black rounded-2xl transition-all shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-xs mt-4"
             >
               <Plus className="w-5 h-5" />
-              Install Plugin
+              Commit Binary
             </button>
-            <p className="text-[10px] text-slate-500 text-center mt-4">
-              Make sure the URL is a direct link to the .smx file.
-            </p>
+            
+            <div className="mt-8 p-4 bg-white/[0.02] rounded-2xl border border-white/5">
+              <div className="flex items-start gap-3">
+                <ExternalLink className="w-4 h-4 text-slate-500 mt-0.5" />
+                <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                  SourceMod requires direct binary access. Ensure the provided URL points to a compiled <span className="text-slate-400 font-bold">.smx</span> resource.
+                </p>
+              </div>
+            </div>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -4,12 +4,13 @@ A modern, web-based management interface for Counter-Strike: Global Offensive se
 
 ## Features
 
-- **🔐 Secure Login**: JWT-authenticated admin access.
-- **👥 Player Management**: Real-time player list with Kick/Ban capabilities and reason logging.
-- **💻 Interactive Console**: Send RCON commands directly to the server and see responses.
-- **🗺️ Map Control**: Switch between official maps or host Steam Workshop maps by ID.
-- **🔌 SourceMod Manager**: List, install (via direct link), and delete plugins.
-- **📊 Live Dashboard**: Monitor server status, player counts, and current map.
+- **🔐 Secure Access**: Simplified login system with `WEB_LOGIN` and `WEB_PASSWORD`.
+- **📊 System Logs**: Real-time telemetry to debug server connections and commands.
+- **✨ Modern UI**: Glassmorphism aesthetic with smooth `framer-motion` animations.
+- **👥 Player Management**: Interactive list with Kick/Ban capabilities and AI/Bot detection.
+- **💻 Interactive Console**: Direct RCON interface with server command history.
+- **🗺️ Map Control**: Mission Control panel for official map rotation and Workshop deployment.
+- **🔌 SourceMod Manager**: Matrix view for managing plugins and direct `.smx` installations.
 
 ---
 
@@ -63,9 +64,9 @@ Edit the `backend/.env` file to configure your server connection:
 
 ```env
 PORT=5000
-JWT_SECRET=your_random_secret_string
-ADMIN_PASSWORD=your_web_panel_password
-
+WEB_LOGIN=your_web_username
+WEB_PASSWORD=your_web_password
+```
 # CS:GO Server Details
 CSGO_SERVER_IP=127.0.0.1
 CSGO_SERVER_PORT=27015
@@ -74,6 +75,37 @@ CSGO_RCON_PASSWORD=your_rcon_password
 # Path to your CS:GO installation (required for SourceMod management)
 CSGO_SERVER_PATH=/home/csgo-server/server
 ```
+
+---
+
+## 🔄 How to Update
+
+To properly apply new updates (including the latest UI redesign):
+
+1. **Pull latest changes**:
+   ```bash
+   git pull
+   ```
+
+2. **Update dependencies**:
+   ```bash
+   # Root
+   npm install
+   # Backend
+   cd backend && npm install
+   # Frontend
+   cd ../frontend && npm install
+   ```
+
+3. **Rebuild the Frontend**:
+   ```bash
+   npm run build
+   ```
+
+4. **Restart Backend** (if using PM2):
+   ```bash
+   pm2 restart csgo-panel
+   ```
 
 ---
 
