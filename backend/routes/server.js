@@ -77,21 +77,22 @@ router.get('/status', async (req, res) => {
             await rcon.end();
             
             // Basic parsing of 'status' command
-            const nameMatch = status.match(/hostname\s+:\s+(.+)/);
-            const mapMatch = status.match(/map\s+:\s+([^\s]+)/);
-            const playersMatch = status.match(/players\s+:\s+(\d+)\s+humans/);
+            // hostname: horsehax.ru | 12 slots | de_dust2
+            const hostnameMatch = status.match(/hostname\s*:\s*(.+)/i);
+            const mapMatch = status.match(/map\s*:\s*([^\s,]+)/i);
+            const playersMatch = status.match(/players\s*:\s*(\d+)\s*humans/i);
             
-            // Try to parse actual player names from 'status' or 'users'
-            // A typical 'status' line for players: # 2 "PlayerName" STEAM_1:0:12345 01:23 50 0 active
             const playerLines = status.split('\n').filter(line => line.trim().startsWith('#') && line.includes('"'));
             const players = playerLines.map(line => {
                 const match = line.match(/"([^"]+)"/);
                 return { name: match ? match[1] : "Unknown Player" };
             });
 
-            global.addLog(`[RCON FALLBACK SUCCESS] ${host} (${players.length} players found)`);
+            const parsedHostname = hostnameMatch ? hostnameMatch[1].trim() : "CS:GO Server";
+
+            global.addLog(`[RCON FALLBACK SUCCESS] ${host} | Name: ${parsedHostname} | Map: ${mapMatch ? mapMatch[1] : '?'}`);
             return res.json({
-                name: nameMatch ? nameMatch[1].trim() : "CS:GO Server (RCON Fallback)",
+                name: parsedHostname,
                 map: mapMatch ? mapMatch[1].trim() : "unknown",
                 players: players.length > 0 ? players : new Array(playersMatch ? parseInt(playersMatch[1]) : 0).fill({ name: "Player" }),
                 maxplayers: 64,
