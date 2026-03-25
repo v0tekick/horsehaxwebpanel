@@ -74,7 +74,7 @@ Edit the `backend/.env` file to configure your server connection:
 
 ```env
 PORT=5000
-JWT_SECRET=secertword (deprecated)
+JWT_SECRET=secretword (deprecated)
 WEB_LOGIN=
 WEB_PASSWORD=
 CSGO_SERVER_IP=
