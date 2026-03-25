@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0a0f1e;
+  --color-surface: #161b2c;
+  --color-primary: #3b82f6;
+  --color-secondary: #6366f1;
+  --color-accent: #06b6d4;
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
 @layer base {
   body {
@@ -27,4 +35,16 @@
 
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-700 rounded-full hover:bg-slate-600 transition-colors;
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-slate-700/50 rounded-full hover:bg-slate-600/50 transition-colors;
+  }
 }
