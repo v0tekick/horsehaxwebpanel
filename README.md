@@ -28,13 +28,13 @@ A modern, web-based management interface for Counter-Strike: Global Offensive se
 
 Before you begin, ensure you have the following installed on your Ubuntu server:
 
-- **Node.js** (v18.x or higher)
+- **Node.js** (v23.x or higher)
 - **npm** (v9.x or higher)
 - **CS:GO Server** with RCON enabled (`rcon_password "your_password"` in `server.cfg`)
 
 ### Installing Node.js on Ubuntu
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_23.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
