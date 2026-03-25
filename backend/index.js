@@ -1,13 +1,25 @@
+const path = require('path');
+// Move dotenv to the very top and force load from absolute path
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth');
 const serverRoutes = require('./routes/server');
 const modRoutes = require('./routes/mods');
 
-dotenv.config();
+// Self-check for configuration
+console.log('--- SERVER STARTUP SELF-CHECK ---');
+if (process.env.ADMIN_PASSWORD) {
+    console.log(`[CONFIG] ADMIN_PASSWORD is loaded (Length: ${process.env.ADMIN_PASSWORD.length})`);
+} else {
+    console.warn('[CONFIG] CRITICAL ERROR: ADMIN_PASSWORD is NOT loaded from .env!');
+}
+if (process.env.JWT_SECRET) {
+    console.log('[CONFIG] JWT_SECRET is loaded');
+}
+console.log('---------------------------------');
 
-const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
