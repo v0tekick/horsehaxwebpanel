@@ -74,8 +74,18 @@ Edit the `backend/.env` file to configure your server connection:
 
 ```env
 PORT=5000
-WEB_LOGIN=your_web_username
-WEB_PASSWORD=your_web_password
+JWT_SECRET=secertword (deprecated)
+WEB_LOGIN=
+WEB_PASSWORD=
+CSGO_SERVER_IP=
+CSGO_SERVER_PORT=
+CSGO_RCON_PASSWORD=
+CSGO_SERVER_PATH=/path/to/csgo_server/
+# If using SSH for file management
+SSH_HOST=
+SSH_PORT=
+SSH_USER=
+SSH_PASSWORD=
 ```
 # CS:GO Server Details
 CSGO_SERVER_IP=127.0.0.1
