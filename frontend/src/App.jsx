@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Terminal, Map, Settings, LogOut, Package } from 'lucide-react';
+import { LayoutDashboard, Users, Terminal, Map, Settings, LogOut, Package, Activity } from 'lucide-react';
 import Login from './views/Login';
 import Dashboard from './views/Dashboard';
 import Players from './views/Players';
 import Console from './views/Console';
 import Maps from './views/Maps';
 import Mods from './views/Mods';
+import SystemLogs from './views/Logs';
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -51,6 +52,10 @@ const Layout = ({ children }) => {
             <Package className="w-5 h-5" />
             SourceMod
           </Link>
+          <Link to="/logs" className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-700 rounded-lg transition-colors">
+            <Activity className="w-5 h-5" />
+            System Logs
+          </Link>
         </nav>
         <div className="p-4 border-t border-slate-700">
           <button
@@ -86,6 +91,7 @@ function App() {
                   <Route path="/console" element={<Console />} />
                   <Route path="/maps" element={<Maps />} />
                   <Route path="/mods" element={<Mods />} />
+                  <Route path="/logs" element={<SystemLogs />} />
                 </Routes>
               </Layout>
             </PrivateRoute>

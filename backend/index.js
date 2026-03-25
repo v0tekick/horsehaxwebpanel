@@ -8,18 +8,28 @@ const authRoutes = require('./routes/auth');
 const serverRoutes = require('./routes/server');
 const modRoutes = require('./routes/mods');
 
+// In-memory log storage
+const serverLogs = [];
+const addLog = (message) => {
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] ${message}`;
+    serverLogs.push(logEntry);
+    if (serverLogs.length > 100) serverLogs.shift();
+    console.log(logEntry);
+};
+
+// Global log utility for routes
+global.addLog = addLog;
+
 // Self-check for configuration
-console.log('--- SERVER STARTUP SELF-CHECK ---');
+addLog('--- SERVER STARTUP SELF-CHECK ---');
 if (process.env.WEB_LOGIN && process.env.WEB_PASSWORD) {
-    console.log(`[CONFIG] WEB_LOGIN: ${process.env.WEB_LOGIN}`);
-    console.log(`[CONFIG] WEB_PASSWORD: ${process.env.WEB_PASSWORD.length} chars`);
+    addLog(`[CONFIG] WEB_LOGIN: ${process.env.WEB_LOGIN}`);
+    addLog(`[CONFIG] WEB_PASSWORD is set`);
 } else {
-    console.warn('[CONFIG] CRITICAL ERROR: WEB_LOGIN or WEB_PASSWORD is NOT loaded from .env!');
+    addLog('[CONFIG] CRITICAL ERROR: WEB_LOGIN or WEB_PASSWORD is NOT loaded from .env!');
 }
-if (process.env.JWT_SECRET) {
-    console.log('[CONFIG] JWT_SECRET is loaded');
-}
-console.log('---------------------------------');
+addLog('---------------------------------');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +41,20 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/server', serverRoutes);
 app.use('/api/mods', modRoutes);
+
+// Log endpoint
+app.get('/api/logs', (req, res) => {
+    // Simple verify from token header
+    const token = req.headers.authorization?.split(' ')[1];
+    const envLogin = (process.env.WEB_LOGIN || 'admin').trim();
+    const envPassword = (process.env.WEB_PASSWORD || 'admin').trim();
+    const expectedToken = Buffer.from(`${envLogin}:${envPassword}`).toString('base64');
+
+    if (!token || token !== expectedToken) {
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+    res.json({ logs: serverLogs });
+});
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../frontend/dist')));

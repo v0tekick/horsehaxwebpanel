@@ -28,7 +28,7 @@ router.use(authenticate);
 // Get server status and players
 router.get('/status', async (req, res) => {
     const settings = getSettings();
-    console.log(`[QUERY] Attempting to query ${settings.host}:${settings.port}`);
+    global.addLog(`[QUERY] Attempting to query ${settings.host}:${settings.port}`);
     try {
         const state = await GameDig.query({
             type: 'csgo',
@@ -38,7 +38,7 @@ router.get('/status', async (req, res) => {
         });
         res.json(state);
     } catch (error) {
-        console.error(`[QUERY ERROR] ${error.message}`);
+        global.addLog(`[QUERY ERROR] ${error.message}`);
         res.status(500).json({ message: 'Error querying server status', error: error.message });
     }
 });
@@ -47,7 +47,7 @@ router.get('/status', async (req, res) => {
 router.post('/command', async (req, res) => {
     const { command } = req.body;
     const settings = getSettings();
-    console.log(`[RCON] Executing command on ${settings.host}:${settings.port}: ${command}`);
+    global.addLog(`[RCON] Executing command on ${settings.host}:${settings.port}: ${command}`);
     try {
         const rcon = await Rcon.connect({
             host: settings.host,
@@ -58,7 +58,7 @@ router.post('/command', async (req, res) => {
         await rcon.end();
         res.json({ response });
     } catch (error) {
-        console.error(`[RCON ERROR] ${error.message}`);
+        global.addLog(`[RCON ERROR] ${error.message}`);
         res.status(500).json({ message: 'Error executing RCON command', error: error.message });
     }
 });

@@ -32,10 +32,10 @@ router.use(authenticate);
 router.get('/', (req, res) => {
     const settings = getSettings();
     const pluginsPath = path.join(settings.serverPath, 'csgo/addons/sourcemod/plugins');
-    console.log(`[FILES] Checking plugins at: ${pluginsPath}`);
+    global.addLog(`[FILES] Checking plugins at: ${pluginsPath}`);
     
     if (!fs.existsSync(pluginsPath)) {
-        console.warn(`[FILES ERROR] Plugins directory not found at: ${pluginsPath}`);
+        global.addLog(`[FILES ERROR] Plugins directory not found at: ${pluginsPath}`);
         return res.json({ 
             message: 'SourceMod plugins directory not found', 
             path: pluginsPath,
@@ -51,7 +51,7 @@ router.post('/install', async (req, res) => {
     const { url, fileName } = req.body;
     const settings = getSettings();
     const dest = path.join(settings.serverPath, 'csgo/addons/sourcemod/plugins', fileName);
-    console.log(`[FILES] Installing mod from ${url} to ${dest}`);
+    global.addLog(`[FILES] Installing mod from ${url} to ${dest}`);
     
     try {
         const response = await axios({
@@ -61,13 +61,16 @@ router.post('/install', async (req, res) => {
         });
         const writer = fs.createWriteStream(dest);
         response.data.pipe(writer);
-        writer.on('finish', () => res.json({ message: 'Mod installed successfully' }));
+        writer.on('finish', () => {
+            global.addLog(`[FILES] Mod installed: ${fileName}`);
+            res.json({ message: 'Mod installed successfully' });
+        });
         writer.on('error', (err) => {
-            console.error(`[FILES ERROR] ${err.message}`);
+            global.addLog(`[FILES ERROR] ${err.message}`);
             res.status(500).json({ message: 'Error writing mod file', error: err.message });
         });
     } catch (error) {
-        console.error(`[FILES ERROR] ${error.message}`);
+        global.addLog(`[FILES ERROR] ${error.message}`);
         res.status(500).json({ message: 'Error downloading mod', error: error.message });
     }
 });
@@ -77,12 +80,14 @@ router.delete('/:fileName', (req, res) => {
     const { fileName } = req.params;
     const settings = getSettings();
     const filePath = path.join(settings.serverPath, 'csgo/addons/sourcemod/plugins', fileName);
-    console.log(`[FILES] Deleting mod at: ${filePath}`);
+    global.addLog(`[FILES] Deleting mod at: ${filePath}`);
     
     if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
+        global.addLog(`[FILES] Mod deleted: ${fileName}`);
         res.json({ message: 'Mod deleted successfully' });
     } else {
+        global.addLog(`[FILES ERROR] Mod not found: ${fileName}`);
         res.status(404).json({ message: 'Mod not found' });
     }
 });
@@ -91,7 +96,7 @@ router.delete('/:fileName', (req, res) => {
 router.post('/workshop-map', async (req, res) => {
     const { workshop_id } = req.body;
     const settings = getSettings();
-    console.log(`[RCON] Setting workshop map ${workshop_id} on ${settings.host}`);
+    global.addLog(`[RCON] Setting workshop map ${workshop_id} on ${settings.host}`);
     try {
         const rcon = await Rcon.connect({
             host: settings.host,
@@ -102,7 +107,7 @@ router.post('/workshop-map', async (req, res) => {
         await rcon.end();
         res.json({ response });
     } catch (error) {
-        console.error(`[RCON ERROR] ${error.message}`);
+        global.addLog(`[RCON ERROR] ${error.message}`);
         res.status(500).json({ message: 'Error setting workshop map', error: error.message });
     }
 });
