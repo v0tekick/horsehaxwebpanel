@@ -82,19 +82,24 @@ router.get('/status', async (req, res) => {
             const mapMatch = status.match(/map\s*:\s*([^\s,]+)/i);
             const playersMatch = status.match(/players\s*:\s*(\d+)\s*humans/i);
             
+            // Try to parse actual player names and bot status from 'status'
             const playerLines = status.split('\n').filter(line => line.trim().startsWith('#') && line.includes('"'));
             const players = playerLines.map(line => {
-                const match = line.match(/"([^"]+)"/);
-                return { name: match ? match[1] : "Unknown Player" };
+                const nameMatch = line.match(/"([^"]+)"/);
+                const isBot = line.includes(' BOT ') || line.includes(' "BOT" ');
+                return { 
+                    name: nameMatch ? nameMatch[1] : "Unknown Player",
+                    isBot: isBot
+                };
             });
 
             const parsedHostname = hostnameMatch ? hostnameMatch[1].trim() : "CS:GO Server";
 
-            global.addLog(`[RCON FALLBACK SUCCESS] ${host} | Name: ${parsedHostname} | Map: ${mapMatch ? mapMatch[1] : '?'}`);
+            global.addLog(`[RCON FALLBACK SUCCESS] ${host} | Name: ${parsedHostname} | Map: ${mapMatch ? mapMatch[1] : '?'} | Players: ${players.length}`);
             return res.json({
                 name: parsedHostname,
                 map: mapMatch ? mapMatch[1].trim() : "unknown",
-                players: players.length > 0 ? players : new Array(playersMatch ? parseInt(playersMatch[1]) : 0).fill({ name: "Player" }),
+                players: players,
                 maxplayers: 64,
                 raw: { rcon: true }
             });

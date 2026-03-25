@@ -91,28 +91,41 @@ const Players = () => {
                 <tr key={idx} className="hover:bg-slate-700/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                        player.isBot || player.raw?.bot 
+                          ? 'bg-slate-600 text-slate-400' 
+                          : 'bg-blue-500/10 text-blue-500'
+                      }`}>
                         {player.name[0].toUpperCase()}
                       </div>
-                      <span className="text-white font-medium">{player.name}</span>
+                      <div className="flex flex-col">
+                        <span className="text-white font-medium">{player.name}</span>
+                        {(player.isBot || player.raw?.bot) && (
+                          <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">AI Bot</span>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => handleKick(player.name)} // GameDig might not give IDs easily, using name for simplicity
-                        className="p-2 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 rounded-lg transition-colors border border-orange-500/20"
-                        title="Kick"
-                      >
-                        <UserMinus className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleBan(player.name)}
-                        className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20"
-                        title="Ban"
-                      >
-                        <Ban className="w-5 h-5" />
-                      </button>
+                      {!(player.isBot || player.raw?.bot) && (
+                        <>
+                          <button
+                            onClick={() => handleKick(player.name)}
+                            className="p-2 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 rounded-lg transition-colors border border-orange-500/20"
+                            title="Kick"
+                          >
+                            <UserMinus className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleBan(player.name)}
+                            className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20"
+                            title="Ban"
+                          >
+                            <Ban className="w-5 h-5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

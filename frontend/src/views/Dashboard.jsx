@@ -29,7 +29,9 @@ const Dashboard = () => {
   
   const serverName = status?.name || status?.raw?.name || "CS:GO Server";
   const currentMap = status?.map || status?.raw?.map || "unknown";
-  const playerCount = status?.players?.length ?? 0;
+  const players = status?.players || [];
+  const playerCount = players.length;
+  const botCount = players.filter(p => p.isBot || p.raw?.bot).length;
   const maxPlayers = status?.maxplayers || 64;
 
   return (
@@ -64,6 +66,11 @@ const Dashboard = () => {
               <p className="text-slate-400 text-sm">Players</p>
               <h3 className="text-xl font-semibold text-white">
                 {playerCount} / {maxPlayers}
+                {botCount > 0 && (
+                  <span className="text-sm font-normal text-slate-400 ml-2">
+                    ({botCount} {botCount === 1 ? 'bot' : 'bots'})
+                  </span>
+                )}
               </h3>
             </div>
           </div>
