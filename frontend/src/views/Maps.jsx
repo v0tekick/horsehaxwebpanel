@@ -9,7 +9,7 @@ const Maps = () => {
   const handleChangeMap = async (mapName) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/server/change-map', {
+      await axios.post('/api/server/change-map', {
         map: mapName
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -24,7 +24,7 @@ const Maps = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/mods/workshop-map', {
+      await axios.post('/api/mods/workshop-map', {
         workshop_id: workshopId
       }, {
         headers: { Authorization: `Bearer ${token}` }

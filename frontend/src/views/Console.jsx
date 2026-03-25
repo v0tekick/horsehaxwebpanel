@@ -21,7 +21,7 @@ const Console = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/server/command', {
+      const response = await axios.post('/api/server/command', {
         command: command
       }, {
         headers: { Authorization: `Bearer ${token}` }

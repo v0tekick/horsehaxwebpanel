@@ -11,7 +11,7 @@ const Mods = () => {
   const fetchMods = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/mods', {
+      const response = await axios.get('/api/mods', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMods(response.data.plugins);
@@ -32,7 +32,7 @@ const Mods = () => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/mods/install', {
+      await axios.post('/api/mods/install', {
         url: installUrl,
         fileName: installName.endsWith('.smx') ? installName : `${installName}.smx`
       }, {
@@ -51,7 +51,7 @@ const Mods = () => {
     if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/mods/${fileName}`, {
+      await axios.delete(`/api/mods/${fileName}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchMods();

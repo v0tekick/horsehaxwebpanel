@@ -10,7 +10,7 @@ const Players = () => {
   const fetchPlayers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/server/status', {
+      const response = await axios.get('/api/server/status', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlayers(response.data.players);
@@ -30,7 +30,7 @@ const Players = () => {
   const handleKick = async (playerId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/server/kick', {
+      await axios.post('/api/server/kick', {
         player_id: playerId,
         reason: reason
       }, {
@@ -46,7 +46,7 @@ const Players = () => {
   const handleBan = async (playerId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/server/ban', {
+      await axios.post('/api/server/ban', {
         player_id: playerId,
         reason: reason,
         duration: 0 // permanent for now
