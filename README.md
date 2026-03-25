@@ -1,6 +1,16 @@
 # CS:GO Web Control Panel
 
-A modern, web-based management interface for Counter-Strike: Global Offensive servers running on Ubuntu.
+A modern, web-based management interface for Counter-Strike: Global Offensive servers running on Ubuntu. With a modern look and animations!
+
+<img width="1440" height="790" alt="Снимок экрана 2026-03-25 в 7 06 02 PM" src="https://github.com/user-attachments/assets/5859d44c-d699-4f37-b7e0-4ce9afc0226f" />
+
+<img width="1440" height="788" alt="Снимок экрана 2026-03-25 в 7 06 37 PM" src="https://github.com/user-attachments/assets/7bd79b04-cf74-49b5-9335-4d5384d0aac5" />
+
+<img width="1440" height="787" alt="Снимок экрана 2026-03-25 в 7 07 00 PM" src="https://github.com/user-attachments/assets/ca09d3cc-90fd-4dbd-a769-c147c96eb577" />
+
+<img width="1440" height="786" alt="Снимок экрана 2026-03-25 в 7 07 23 PM" src="https://github.com/user-attachments/assets/8044ea74-bb2c-459e-9c1b-d2c859eefe9d" />
+
+<img width="1440" height="787" alt="Снимок экрана 2026-03-25 в 7 08 22 PM" src="https://github.com/user-attachments/assets/830fd55b-382e-4714-9959-ada2888ee4b1" />
 
 ## Features
 
