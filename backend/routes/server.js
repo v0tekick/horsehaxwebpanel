@@ -28,39 +28,74 @@ router.use(authenticate);
 // Get server status and players
 router.get('/status', async (req, res) => {
     const settings = getSettings();
-    global.addLog(`[QUERY] Attempting to query ${settings.host}:${settings.port}`);
-    try {
-        const state = await GameDig.query({
-            type: 'csgo',
-            host: settings.host,
-            port: settings.port,
-            maxAttempts: 3
-        });
-        res.json(state);
-    } catch (error) {
-        global.addLog(`[QUERY ERROR] ${error.message}`);
-        res.status(500).json({ message: 'Error querying server status', error: error.message });
+    const hosts = [settings.host];
+    if (settings.host === '127.0.0.1') {
+        // Fallback to public IP if loopback fails
+        hosts.push('150.241.116.177');
     }
+
+    for (const host of hosts) {
+        global.addLog(`[QUERY] Attempting to query ${host}:${settings.port} (type: csgo)`);
+        try {
+            const state = await GameDig.query({
+                type: 'csgo',
+                host: host,
+                port: settings.port,
+                maxAttempts: 3,
+                socketTimeout: 3000
+            });
+            global.addLog(`[QUERY SUCCESS] ${host}:${settings.port}`);
+            return res.json(state);
+        } catch (error) {
+            global.addLog(`[QUERY ERROR] ${host} (csgo): ${error.message}`);
+            
+            // Try 'source' type as fallback
+            global.addLog(`[QUERY] Attempting fallback query ${host}:${settings.port} (type: source)`);
+            try {
+                const state = await GameDig.query({
+                    type: 'source',
+                    host: host,
+                    port: settings.port,
+                    maxAttempts: 2,
+                    socketTimeout: 2000
+                });
+                global.addLog(`[QUERY SUCCESS] ${host}:${settings.port} (fallback)`);
+                return res.json(state);
+            } catch (fallbackError) {
+                global.addLog(`[QUERY ERROR] ${host} (source): ${fallbackError.message}`);
+            }
+        }
+    }
+
+    res.status(500).json({ message: 'Error querying server status from all IPs/protocols' });
 });
 
 // Execute RCON command
 router.post('/command', async (req, res) => {
     const { command } = req.body;
     const settings = getSettings();
-    global.addLog(`[RCON] Executing command on ${settings.host}:${settings.port}: ${command}`);
-    try {
-        const rcon = await Rcon.connect({
-            host: settings.host,
-            port: settings.port,
-            password: settings.password
-        });
-        const response = await rcon.send(command);
-        await rcon.end();
-        res.json({ response });
-    } catch (error) {
-        global.addLog(`[RCON ERROR] ${error.message}`);
-        res.status(500).json({ message: 'Error executing RCON command', error: error.message });
+    const hosts = [settings.host];
+    if (settings.host === '127.0.0.1') hosts.push('150.241.116.177');
+
+    for (const host of hosts) {
+        global.addLog(`[RCON] Attempting command on ${host}:${settings.port}: ${command}`);
+        try {
+            const rcon = await Rcon.connect({
+                host: host,
+                port: settings.port,
+                password: settings.password,
+                timeout: 5000
+            });
+            const response = await rcon.send(command);
+            await rcon.end();
+            global.addLog(`[RCON SUCCESS] ${host}:${settings.port}`);
+            return res.json({ response });
+        } catch (error) {
+            global.addLog(`[RCON ERROR] ${host}:${settings.port}: ${error.message}`);
+        }
     }
+    
+    res.status(500).json({ message: 'Error executing RCON command on all IPs' });
 });
 
 // Test connection route
@@ -121,7 +156,6 @@ router.post('/ban', async (req, res) => {
             port: settings.port,
             password: settings.password
         });
-        // duration in minutes, 0 for permanent
         const response = await rcon.send(`banid ${duration || 0} ${player_id} ${reason || 'Banned by admin'}`);
         await rcon.end();
         res.json({ response });
